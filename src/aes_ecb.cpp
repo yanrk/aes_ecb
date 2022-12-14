@@ -4,13 +4,18 @@
 
 bool aes_ecb_encrypt_data(const unsigned char * key, size_t key_size, const unsigned char * src, size_t src_size, std::vector<unsigned char> & dst)
 {
-    if (nullptr == key || (16 != key_size && 24 != key_size && 32 != key_size) || nullptr == src)
+    if (nullptr == key || (16 != key_size && 24 != key_size && 32 != key_size))
+    {
+        return(false);
+    }
+
+    if (nullptr == src && 0 != src_size)
     {
         return(false);
     }
 
     AES_KEY aes_key = { 0x00 };
-    if (0 != AES_set_encrypt_key(key, key_size * 8, &aes_key))
+    if (0 != AES_set_encrypt_key(key, static_cast<int>(key_size * 8), &aes_key))
     {
         return(false);
     }
@@ -29,7 +34,10 @@ bool aes_ecb_encrypt_data(const unsigned char * key, size_t key_size, const unsi
         {
             const unsigned char pad_data[AES_BLOCK_SIZE] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 };
             unsigned char tmp_data[AES_BLOCK_SIZE] = { 0x00 };
-            memcpy(tmp_data, src + pos, src_size - pos);
+            if (pos < src_size)
+            {
+                memcpy(tmp_data, src + pos, src_size - pos);
+            }
             memcpy(tmp_data + src_size - pos, pad_data, pos + AES_BLOCK_SIZE - src_size);
             AES_encrypt(tmp_data, &dst[pos], &aes_key);
         }
@@ -59,7 +67,7 @@ bool aes_ecb_decrypt_data(const unsigned char * key, size_t key_size, const unsi
     }
 
     AES_KEY aes_key = { 0x00 };
-    if (0 != AES_set_decrypt_key(key, key_size * 8, &aes_key))
+    if (0 != AES_set_decrypt_key(key, static_cast<int>(key_size * 8), &aes_key))
     {
         return(false);
     }
